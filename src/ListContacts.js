@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
 import escapeRegExp from 'escape-string-regexp';
 import sortBy from 'sort-by';
 
@@ -14,24 +15,29 @@ class ListContacts extends Component {
   }
 
   updateQuery = (query) => {
+    console.log('update query');
     this.setState({query: query.trim()})
   }
 
+  clearQuery = () => {
+    this.setState({query: ''});
+  }
+
   render () {
-    let showingContacts;
-    if (this.state.query){
-      const match = new RegExp(escapeRegExp(this.state.query), 'i');
-      console.log('match',match);
-      showingContacts = this.props.contacts.filter((contact) => {
-        console.log('contact', contact.name);
-        match.test(contact.name)});
-      console.log('showingContacts',showingContacts)
+    const { contacts, onDeleteContact } = this.props
+    const { query } = this.state
+
+    let showingContacts
+    if (query) {
+      const match = new RegExp(escapeRegExp(query), 'i');
+      showingContacts = contacts.filter((contact) => match.test(contact.name));
     } else {
-      showingContacts = this.props.contacts;
+      showingContacts = contacts;
     }
+
+    showingContacts.sort(sortBy('name'));
     return (
       <div className="list-contacts">
-      {JSON.stringify(this.state)}
         <div className="list-contacts-top">
           <input
             className="search-contacts"
@@ -40,7 +46,18 @@ class ListContacts extends Component {
             value={this.state.query}
             onChange={(event) => this.updateQuery(event.target.value)}
           />
+        <Link
+          to="/create"
+          className="add-contact"
+        >Add</Link>
         </div>
+
+       {showingContacts.length !== contacts.length && (
+          <div className="showing-contacts"><span>Now showing {showingContacts.length} of {contacts.length}</span>
+          <button onClick={this.clearQuery}> show all</button>
+          </div>
+        )}
+
         <ol className='contact-list'>
           {showingContacts.map((contact) => (
               <li key={contact.id} className='contact-list-item'>
